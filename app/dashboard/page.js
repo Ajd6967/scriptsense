@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { supabase } from "../lib/supabase";
 
 // ── Helpers ────────────────────────────────────────────────────────────────
@@ -764,8 +765,21 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="bg-blue-900 text-white py-10 px-6">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-4xl font-bold mb-2">Your Dashboard</h1>
-          <p className="text-blue-200 text-xl">Manage your medications, health data, and schedule</p>
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <h1 className="text-4xl font-bold mb-2">Your Dashboard</h1>
+              <p className="text-blue-200 text-xl">Manage your medications, health data, and schedule</p>
+            </div>
+            <Link
+              href="/chat"
+              className="bg-teal-500 hover:bg-teal-400 text-white text-lg font-bold px-7 py-4 rounded-full transition-colors flex items-center gap-2 shrink-0"
+            >
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" stroke="white" strokeWidth="2" strokeLinejoin="round" />
+              </svg>
+              Chat with ScriptSense AI
+            </Link>
+          </div>
         </div>
       </div>
 
