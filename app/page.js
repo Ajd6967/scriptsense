@@ -214,7 +214,7 @@ export default function Home() {
 
           <div className="flex flex-col sm:flex-row gap-5 justify-center items-center">
             <Link
-              href="/chat"
+              href="/register"
               className="bg-white text-blue-900 text-xl font-bold px-10 py-5 rounded-full hover:bg-blue-50 transition-colors shadow-lg w-full sm:w-auto text-center"
             >
               Get Started
@@ -400,7 +400,7 @@ export default function Home() {
                 ))}
               </ul>
               <Link
-                href="/chat"
+                href="/register"
                 className="bg-blue-900 text-white text-xl font-bold px-8 py-5 rounded-full hover:bg-blue-800 transition-colors text-center"
               >
                 Get Started
