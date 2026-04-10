@@ -1,4 +1,5 @@
 import Link from "next/link";
+import EmailCaptureForm from "./components/EmailCaptureForm";
 
 function ShieldCheckIcon({ size = 40, color = "#0d9488" }) {
   return (
@@ -309,6 +310,19 @@ export default function Home() {
               <ArrowRightIcon />
             </Link>
           </div>
+        </div>
+      </section>
+
+      {/* ── Email Capture ── */}
+      <section className="py-24 bg-gradient-to-br from-blue-900 to-teal-700 text-white">
+        <div className="max-w-3xl mx-auto px-6 text-center">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">
+            Be the First to Know
+          </h2>
+          <p className="text-xl text-blue-200 mb-10 leading-relaxed">
+            ScriptSense is launching soon. Enter your name and email to get early access and updates.
+          </p>
+          <EmailCaptureForm />
         </div>
       </section>
 

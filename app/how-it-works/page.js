@@ -1,5 +1,6 @@
 import Link from "next/link";
 import FAQ from "../components/FAQ";
+import InteractiveDemo from "../components/InteractiveDemo";
 
 const steps = [
   {
@@ -188,6 +189,19 @@ export default function HowItWorks() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Interactive Demo ── */}
+      <section className="py-24 bg-blue-50">
+        <div className="max-w-4xl mx-auto px-6">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">See It in Action</h2>
+            <p className="text-xl text-gray-600 max-w-xl mx-auto">
+              Walk through a real conversation with ScriptSense AI. Click to send each message and see how it responds.
+            </p>
+          </div>
+          <InteractiveDemo />
         </div>
       </section>
 

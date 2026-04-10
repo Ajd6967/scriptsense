@@ -1,10 +1,11 @@
 import Link from "next/link";
+import Image from "next/image";
 
 
 const values = [
   {
     title: "Safety First, Always",
-    desc: "Every recommendation we make is vetted against peer-reviewed medical literature. We never guess. When we're uncertain, we say so — and tell you to ask your doctor.",
+    desc: "Every recommendation we make is vetted against peer-reviewed medical literature. We never guess. When we're uncertain, we say so, and tell you to ask your doctor.",
     icon: (
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
@@ -30,7 +31,7 @@ const values = [
   },
   {
     title: "Clarity Over Complexity",
-    desc: "Medical information doesn't have to be confusing. We translate clinical language into plain English so you can understand exactly what your medications are doing — and why.",
+    desc: "Medical information doesn't have to be confusing. We translate clinical language into plain English so you can understand exactly what your medications are doing, and why.",
     icon: (
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
@@ -49,7 +50,7 @@ const values = [
   },
   {
     title: "Designed for Everyone",
-    desc: "Seniors shouldn't need a smartphone course to use a health app. ScriptSense is built from the ground up with large text, clear buttons, and zero jargon — so it works for everyone.",
+    desc: "Seniors shouldn't need a smartphone course to use a health app. ScriptSense is built from the ground up with large text, clear buttons, and zero jargon, so it works for everyone.",
     icon: (
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <circle cx="12" cy="12" r="10" fill="#0d9488" opacity="0.2" />
@@ -65,7 +66,7 @@ const values = [
   },
   {
     title: "Science-Backed Guidance",
-    desc: "Our recommendations come from clinical pharmacology research, FDA drug interaction databases, and our medical advisory board — not guesswork or supplements industry marketing.",
+    desc: "Our recommendations come from clinical pharmacology research, FDA drug interaction databases, and our medical advisory board, not guesswork or supplements industry marketing.",
     icon: (
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" aria-hidden="true">
         <path
@@ -81,14 +82,6 @@ const values = [
 ];
 
 
-function PlayIcon() {
-  return (
-    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-      <circle cx="12" cy="12" r="10" stroke="#9ca3af" strokeWidth="2" />
-      <path d="M10 8l6 4-6 4V8z" fill="#9ca3af" />
-    </svg>
-  );
-}
 
 export default function About() {
   return (
@@ -100,7 +93,7 @@ export default function About() {
             About ScriptSense
           </h1>
           <p className="text-xl text-blue-200 max-w-2xl mx-auto leading-relaxed">
-            We believe every senior deserves to understand their medications —
+            We believe every senior deserves to understand their medications:
             not just what to take, but when, why, and how safely.
           </p>
         </div>
@@ -139,7 +132,7 @@ export default function About() {
                 <p>
                   The global population is aging rapidly, and the healthcare
                   system is struggling to keep up. Seniors managing multiple
-                  medications often fall through the cracks — without
+                  medications often fall through the cracks, without
                   personalized guidance on how their prescriptions interact or
                   when to take them.
                 </p>
@@ -152,20 +145,61 @@ export default function About() {
               </div>
             </div>
 
-            {/* Video placeholder */}
-            <div className="bg-gray-200 rounded-3xl aspect-video flex flex-col items-center justify-center border-2 border-dashed border-gray-400">
-              <PlayIcon />
-              <p className="text-gray-600 text-xl font-semibold mt-4">
-                Founder Story
-              </p>
-              <p className="text-gray-400 text-base mt-1">
-                [Video embed placeholder]
-              </p>
+            {/* Pitch video */}
+            <div className="rounded-3xl overflow-hidden aspect-video shadow-lg">
+              <iframe
+                src="https://psu.mediaspace.kaltura.com/embed/secure/iframe/entryId/1_yvumnvx5"
+                allowFullScreen
+                allow="autoplay *; fullscreen *; encrypted-media *"
+                className="w-full h-full"
+                title="Founder pitch video"
+              />
             </div>
           </div>
         </div>
       </section>
 
+
+{/* ── Meet the Founder ── */}
+      <section className="py-24 bg-white">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Meet the Founder
+            </h2>
+            <p className="text-xl text-gray-600 max-w-xl mx-auto">
+              The person behind ScriptSense.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row justify-center gap-8 mb-16">
+            {["/founder-1.jpg", "/founder-2.jpg", "/founder-3.jpg"].map((src, i) => (
+              <div key={i} className="flex flex-col items-center gap-4">
+                <div className="relative w-56 h-56 rounded-3xl overflow-hidden border-4 border-teal-100 shadow-lg">
+                  <Image
+                    src={src}
+                    alt={`Founder photo ${i + 1}`}
+                    fill
+                    sizes="224px"
+                    className="object-cover"
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="max-w-3xl mx-auto bg-gray-50 rounded-3xl p-10 border border-gray-100">
+            <h3 className="text-2xl font-bold text-gray-900 mb-6">My Story</h3>
+            <div className="flex flex-col gap-5 text-lg text-gray-600 leading-relaxed">
+              <p>
+                My freshman year of college, I was diagnosed with a condition that required me to take a combination of medications and supplements. What followed was one of the most frustrating experiences of my life, not the diagnosis itself, but the process of figuring out a regimen that actually worked. I spent weeks battling side effects, unsure of what was interacting with what, and wishing I had someone, or something, that could just help me make sense of it all. That&apos;s when I realized how much AI-powered guidance could have helped.
+              </p>
+              <p>
+                While I built ScriptSense with seniors in mind because they typically manage more medications than any other group, this problem touches everyone. Anyone navigating a new diagnosis, a complex regimen, or simply trying to understand what they&apos;re putting in their body deserves that same clarity.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
 
 {/* ── Values ── */}
       <section className="py-24 bg-blue-50">
@@ -175,7 +209,7 @@ export default function About() {
               What We Stand For
             </h2>
             <p className="text-xl text-gray-600 max-w-xl mx-auto">
-              These principles guide every decision we make — from how we
+              These principles guide every decision we make, from how we
               design the interface to how we validate our AI recommendations.
             </p>
           </div>
