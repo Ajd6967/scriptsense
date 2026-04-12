@@ -191,62 +191,14 @@ function MedCard({ med, onEdit, onDelete }) {
   );
 }
 
-function MedAISuggestionBanner({ suggestions, onAccept, onDismiss }) {
-  return (
-    <div className="bg-teal-50 border-2 border-teal-300 rounded-2xl p-6 mb-8">
-      <div className="flex items-start gap-4">
-        <div className="w-10 h-10 bg-teal-600 rounded-full flex items-center justify-center shrink-0">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="2" y="8" width="20" height="8" rx="4" stroke="white" strokeWidth="2" />
-            <line x1="12" y1="8" x2="12" y2="16" stroke="white" strokeWidth="2" />
-          </svg>
-        </div>
-        <div className="flex-1">
-          <p className="text-lg font-bold text-teal-900 mb-1">ScriptSense detected medications in your chat</p>
-          <p className="text-base text-teal-800 mb-4">
-            Would you like me to add the following to your medication list?
-          </p>
-          <div className="flex flex-col gap-2 mb-4">
-            {suggestions.map((med, i) => (
-              <div key={i} className="bg-white rounded-xl border border-teal-200 px-5 py-3">
-                <p className="text-lg font-bold text-gray-900">{med.name}</p>
-                <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-0.5">
-                  {med.dosage && <p className="text-base text-gray-500">{med.dosage}</p>}
-                  {med.frequency && <p className="text-base text-gray-500">{med.frequency}</p>}
-                  {med.notes && <p className="text-base text-gray-400 italic">{med.notes}</p>}
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="flex gap-3">
-            <button
-              onClick={onAccept}
-              className="bg-teal-600 text-white text-lg font-semibold px-6 py-3 rounded-full hover:bg-teal-700 transition-colors"
-            >
-              Yes, add these medications
-            </button>
-            <button
-              onClick={onDismiss}
-              className="text-gray-500 text-lg font-semibold px-6 py-3 rounded-full border-2 border-gray-200 hover:bg-gray-50 transition-colors"
-            >
-              No thanks
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
+
 
 function MedicationsTab({ userId }) {
   const [medications, setMedications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingMed, setEditingMed] = useState(null); // { ...med } when editing
-  const [suggestions, setSuggestions] = useState([]);
-  const [checkingAI, setCheckingAI] = useState(false);
 
-  // Load medications from Supabase
   useEffect(() => {
     if (!userId) return;
     supabase
@@ -259,30 +211,6 @@ function MedicationsTab({ userId }) {
         setLoading(false);
       });
   }, [userId]);
-
-  // Check chat history for AI-detected medications
-  useEffect(() => {
-    if (!userId || loading) return;
-    const stored = sessionStorage.getItem("scriptsense_chat");
-    if (!stored) return;
-    let messages;
-    try { messages = JSON.parse(stored); } catch { return; }
-    if (!messages || messages.length < 2) return;
-
-    setCheckingAI(true);
-    fetch("/api/extract-medications", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages, currentMedications: medications }),
-    })
-      .then((r) => r.json())
-      .then(({ extracted }) => {
-        if (extracted.length > 0) setSuggestions(extracted);
-      })
-      .catch(() => {})
-      .finally(() => setCheckingAI(false));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, loading]);
 
   async function handleAdd(form) {
     const { data, error } = await supabase
@@ -314,19 +242,6 @@ function MedicationsTab({ userId }) {
     setMedications((prev) => prev.filter((m) => m.id !== id));
   }
 
-  async function handleAcceptSuggestions() {
-    const inserted = [];
-    for (const med of suggestions) {
-      const { data, error } = await supabase
-        .from("medications")
-        .insert({ user_id: userId, ...med })
-        .select()
-        .single();
-      if (!error && data) inserted.push(data);
-    }
-    setMedications((prev) => [...prev, ...inserted]);
-    setSuggestions([]);
-  }
 
   if (loading) return <p className="text-xl text-gray-400">Loading your medications…</p>;
 
@@ -346,18 +261,6 @@ function MedicationsTab({ userId }) {
           </button>
         )}
       </div>
-
-      {checkingAI && (
-        <p className="text-base text-teal-600 mb-4">Checking your chat for medications…</p>
-      )}
-
-      {suggestions.length > 0 && (
-        <MedAISuggestionBanner
-          suggestions={suggestions}
-          onAccept={handleAcceptSuggestions}
-          onDismiss={() => setSuggestions([])}
-        />
-      )}
 
       {showForm && (
         <div className="mb-6">
@@ -452,63 +355,44 @@ function HealthDataTab({ userId }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null); // "success" | "error"
-  const [suggestion, setSuggestion] = useState(null); // pending AI suggestion
-  const [checkingAI, setCheckingAI] = useState(false);
+  const [suggestion, setSuggestion] = useState(null);
 
-  // Load profile from Supabase
+  function applyProfileData(data) {
+    if (!data) return;
+    setProfile({
+      birthday: data.birthday ?? "",
+      weight: data.weight ?? "",
+      primary_conditions: data.primary_conditions ?? "",
+      known_allergies: data.known_allergies ?? "",
+      kidney_function: data.kidney_function ?? "",
+      liver_function: data.liver_function ?? "",
+    });
+  }
+
+  // Load profile and subscribe to real-time updates
   useEffect(() => {
     if (!userId) return;
+
     supabase
       .from("health_profiles")
       .select("*")
       .eq("user_id", userId)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) {
-          setProfile({
-            birthday: data.birthday ?? "",
-            weight: data.weight ?? "",
-            primary_conditions: data.primary_conditions ?? "",
-            known_allergies: data.known_allergies ?? "",
-            kidney_function: data.kidney_function ?? "",
-            liver_function: data.liver_function ?? "",
-          });
-        }
+        applyProfileData(data);
         setLoading(false);
       });
-  }, [userId]);
 
-  // Check chat history for health info AI can extract
-  useEffect(() => {
-    if (!userId || loading) return;
+    const channel = supabase
+      .channel(`health_profiles:${userId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "health_profiles", filter: `user_id=eq.${userId}` },
+        (payload) => applyProfileData(payload.new)
+      )
+      .subscribe();
 
-    const stored = sessionStorage.getItem("scriptsense_chat");
-    if (!stored) return;
-
-    let messages;
-    try { messages = JSON.parse(stored); } catch { return; }
-    if (!messages || messages.length < 2) return;
-
-    setCheckingAI(true);
-    fetch("/api/extract-health", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages, currentProfile: profile }),
-    })
-      .then((r) => r.json())
-      .then(({ extracted }) => {
-        // Only suggest fields that differ from current profile and have a value
-        const meaningful = Object.fromEntries(
-          Object.entries(extracted).filter(([k, v]) => v && v !== profile[k])
-        );
-        if (Object.keys(meaningful).length > 0) {
-          setSuggestion(meaningful);
-        }
-      })
-      .catch(() => {})
-      .finally(() => setCheckingAI(false));
+    return () => supabase.removeChannel(channel);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, loading]);
+  }, [userId]);
 
   async function saveProfile(dataToSave) {
     setSaving(true);
@@ -549,10 +433,6 @@ function HealthDataTab({ userId }) {
           Help us personalize your analysis by sharing relevant health information
         </p>
       </div>
-
-      {checkingAI && (
-        <p className="text-base text-teal-600 mb-4">Checking your chat for health information…</p>
-      )}
 
       {suggestion && (
         <AISuggestionBanner
@@ -666,25 +546,118 @@ function HealthDataTab({ userId }) {
   );
 }
 
-function RegimenTab() {
+const TIME_BLOCKS = [
+  { key: "morning", label: "Morning" },
+  { key: "afternoon", label: "Afternoon" },
+  { key: "evening", label: "Evening" },
+  { key: "bedtime", label: "Bedtime" },
+];
+
+function RegimenTab({ userId }) {
+  const [regimen, setRegimen] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
+
+  async function generateRegimen(medications) {
+    if (!medications || medications.length === 0) { setLoading(false); return; }
+    setGenerating(true);
+    try {
+      const res = await fetch("/api/generate-regimen", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ medications }),
+      });
+      const { regimen } = await res.json();
+      if (regimen) {
+        setRegimen(regimen);
+        // Cache regimen with medication IDs so we know when to regenerate
+        const medIds = medications.map((m) => m.id).sort().join(",");
+        localStorage.setItem("scriptsense_regimen", JSON.stringify({ medIds, regimen }));
+      }
+    } catch { /* ignore */ }
+    finally { setGenerating(false); setLoading(false); }
+  }
+
+  useEffect(() => {
+    if (!userId) { setLoading(false); return; }
+    supabase
+      .from("medications")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: true })
+      .then(({ data: medications }) => {
+        if (!medications || medications.length === 0) { setLoading(false); return; }
+
+        // Check if we have a cached regimen for the same medications
+        const medIds = medications.map((m) => m.id).sort().join(",");
+        const cached = localStorage.getItem("scriptsense_regimen");
+        if (cached) {
+          try {
+            const { medIds: cachedIds, regimen } = JSON.parse(cached);
+            if (cachedIds === medIds) { setRegimen(regimen); setLoading(false); return; }
+          } catch { /* ignore */ }
+        }
+
+        // Medications changed — regenerate
+        generateRegimen(medications);
+      });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId]);
+
+  const hasAnyMeds = regimen && TIME_BLOCKS.some((b) => regimen[b.key]?.length > 0);
+
   return (
     <div>
       <div className="mb-8">
         <h2 className="text-3xl font-bold text-gray-900">My Regimen</h2>
         <p className="text-lg text-gray-500 mt-1">
-          Your personalized daily medication schedule will appear here
+          Your personalized daily medication schedule
         </p>
       </div>
-      <EmptyState
-        icon={
-          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
-            <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-          </svg>
-        }
-        title="Your regimen is empty"
-        desc="Add your medications and health data first. ScriptSense will generate your personalized daily schedule automatically."
-      />
+
+      {(loading || generating) && <p className="text-xl text-gray-400">Generating your regimen…</p>}
+
+      {!loading && !hasAnyMeds && (
+        <EmptyState
+          icon={
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect x="3" y="4" width="18" height="18" rx="2" stroke="currentColor" strokeWidth="2" />
+              <path d="M16 2v4M8 2v4M3 10h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          }
+          title="Your regimen is empty"
+          desc="Chat with ScriptSense AI about your medications first, then come back here to see your personalized daily schedule."
+        />
+      )}
+
+      {!loading && hasAnyMeds && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {TIME_BLOCKS.map(({ key, label }) => {
+            const meds = regimen[key] ?? [];
+            return (
+              <div key={key} className="bg-gray-50 rounded-2xl border border-gray-200 p-6">
+                <h3 className="text-xl font-bold text-gray-900 mb-4">
+                  {label}
+                </h3>
+                {meds.length === 0 ? (
+                  <p className="text-base text-gray-400 italic">No medications scheduled</p>
+                ) : (
+                  <div className="flex flex-col gap-3">
+                    {meds.map((med, i) => (
+                      <div key={i} className="bg-white rounded-xl border border-gray-100 px-5 py-4">
+                        <p className="text-lg font-semibold text-gray-900">{med.medication}</p>
+                        {med.notes && (
+                          <p className="text-base text-gray-500 mt-1">{med.notes}</p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
@@ -757,7 +730,7 @@ export default function DashboardPage() {
   const tabContent = {
     medications: <MedicationsTab userId={user?.id} />,
     health: <HealthDataTab userId={user?.id} />,
-    regimen: <RegimenTab />,
+    regimen: <RegimenTab userId={user?.id} />,
     notifications: <NotificationsTab />,
   };
 
